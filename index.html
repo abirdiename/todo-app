@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Простой TODO-лист</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="todo-app">
+        <h1 class="title">TODO-лист</h1>
+
+        <form id="task-form" class="task-form">
+            <div class="inputs-row">
+                <div class="field">
+                    <label for="deadline-input" class="field-label">Дедлайн</label>
+                    <input
+                        type="date"
+                        id="deadline-input"
+                        class="input input-date"
+                    >
+                </div>
+
+                <div class="field field-grow">
+                    <label for="task-input" class="field-label">Задача</label>
+                    <div class="field-inline">
+                        <input
+                            type="text"
+                            id="task-input"
+                            class="input input-text"
+                            placeholder="Что нужно сделать?"
+                        >
+                        <button type="submit" class="btn btn-add">Добавить</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <!-- Панель управления: сортировка + фильтры -->
+        <div class="controls-row">
+            <button type="button" id="sort-deadline" class="btn btn-sort">
+                Сортировать по дедлайну
+            </button>
+
+            <div class="filters-row">
+                <button
+                    type="button"
+                    class="btn btn-filter filter-active"
+                    data-filter="all"
+                >
+                    Все
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-filter"
+                    data-filter="active"
+                >
+                    Активные
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-filter"
+                    data-filter="completed"
+                >
+                    Выполненные
+                </button>
+            </div>
+        </div>
+
+        <ul id="task-list" class="task-list">
+            <!-- задачи будут добавляться сюда через JS -->
+        </ul>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
