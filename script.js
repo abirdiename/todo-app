@@ -5,13 +5,25 @@ document.addEventListener("DOMContentLoaded", function () {
     const taskInput = document.getElementById("task-input");
     const deadlineInput = document.getElementById("deadline-input");
     const taskList = document.getElementById("task-list");
-    const sortButton = document.getElementById("sort-deadline");
+
     const filterButtons = document.querySelectorAll(".btn-filter");
 
-    let tasks = [];
-    let currentFilter = "all"; // all | active | completed
+    const sortDeadlineBtn = document.getElementById("sort-deadline");
+    const deadlinePeriodBtn = document.getElementById("deadline-period-btn");
+    const deadlinePeriodPanel = document.getElementById("deadline-period-panel");
+    const deadlineFromInput = document.getElementById("deadline-from");
+    const deadlineToInput = document.getElementById("deadline-to");
+    const deadlineApplyBtn = document.getElementById("deadline-apply");
+    const deadlineResetBtn = document.getElementById("deadline-reset");
 
-    // ---- Работа с localStorage ----
+    let tasks = [];
+    let currentFilter = "all";   // all | active | completed
+
+    // период по дедлайну (для кнопки "Сортировка по периоду")
+    let deadlineFrom = "";       // YYYY-MM-DD или ""
+    let deadlineTo = "";         // YYYY-MM-DD или ""
+
+    // ---- localStorage ----
 
     function loadTasks() {
         try {
@@ -23,7 +35,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const parsed = JSON.parse(raw);
             if (Array.isArray(parsed)) {
-                tasks = parsed;
+                tasks = parsed.map(function (t) {
+                    return {
+                        id: t.id || Date.now(),
+                        text: t.text || "",
+                        deadline: t.deadline || "",
+                        completed: !!t.completed,
+                        completedAt: t.completedAt || ""
+                    };
+                });
             } else {
                 tasks = [];
             }
@@ -41,21 +61,61 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // ---- Фильтрация задач ----
+    // ---- Утилита: парсим YYYY-MM-DD в Date (без времени) ----
+
+    function parseDateOnly(iso) {
+        if (!iso) return null;
+        const parts = iso.split("-");
+        if (parts.length !== 3) return null;
+        const [yStr, mStr, dStr] = parts;
+        const y = Number(yStr);
+        const m = Number(mStr);
+        const d = Number(dStr);
+        if (!y || !m || !d) return null;
+        return new Date(y, m - 1, d);
+    }
+
+    // ---- Фильтрация по статусу и периоду дедлайна ----
+
+    function isDeadlineInPeriod(task) {
+        if (!deadlineFrom && !deadlineTo) {
+            return true; // период не задан — не фильтруем
+        }
+
+        if (!task.deadline) {
+            return false; // без дедлайна — вне периода
+        }
+
+        const deadlineDate = parseDateOnly(task.deadline);
+        if (!deadlineDate) return false;
+
+        const fromDate = parseDateOnly(deadlineFrom);
+        const toDate = parseDateOnly(deadlineTo);
+
+        if (fromDate && deadlineDate < fromDate) return false;
+        if (toDate && deadlineDate > toDate) return false;
+
+        return true;
+    }
 
     function filterTasksForRender() {
         return tasks.filter(function (task) {
-            if (currentFilter === "active") {
-                return !task.completed;
+            if (currentFilter === "active" && task.completed) {
+                return false;
             }
-            if (currentFilter === "completed") {
-                return task.completed;
+            if (currentFilter === "completed" && !task.completed) {
+                return false;
             }
-            return true; // all
+
+            if (!isDeadlineInPeriod(task)) {
+                return false;
+            }
+
+            return true;
         });
     }
 
-    // ---- Рендер задач ----
+    // ---- Рендер ----
 
     function renderTasks() {
         taskList.innerHTML = "";
@@ -128,23 +188,28 @@ document.addEventListener("DOMContentLoaded", function () {
         li.appendChild(content);
         li.appendChild(actions);
 
-        // классы completed / overdue
         if (task.completed) {
             li.classList.add("task-completed");
         }
         updateTaskOverdueState(li);
 
-        // ---- Обработчики ----
-
+        // чекбокс
         checkbox.addEventListener("change", function () {
             task.completed = checkbox.checked;
+            if (task.completed) {
+                task.completedAt = new Date().toISOString();
+            } else {
+                task.completedAt = "";
+            }
+
             li.classList.toggle("task-completed", task.completed);
             saveTasks();
             updateTaskOverdueState(li);
-            // после смены статуса перерисуем (чтобы фильтры сразу срабатывали)
+            // список НЕ пересортировываем автоматически – сортировка только по кнопке
             renderTasks();
         });
 
+        // удаление
         deleteBtn.addEventListener("click", function () {
             tasks = tasks.filter(function (t) {
                 return t.id !== task.id;
@@ -153,7 +218,117 @@ document.addEventListener("DOMContentLoaded", function () {
             renderTasks();
         });
 
+        // редактирование текста
+        textSpan.addEventListener("click", function () {
+            startEditText(task, textSpan);
+        });
+
+        // редактирование дедлайна
+        deadlineSpan.addEventListener("click", function () {
+            startEditDeadline(task, deadlineSpan);
+        });
+
         return li;
+    }
+
+    // ---- Редактирование текста ----
+
+    function startEditText(task, textSpan) {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "task-edit-input";
+        input.value = task.text;
+
+        textSpan.replaceWith(input);
+        input.focus();
+        input.select();
+
+        function finish(save) {
+            let newText = task.text;
+            if (save) {
+                const trimmed = input.value.trim();
+                if (trimmed) {
+                    newText = trimmed;
+                    task.text = newText;
+                }
+            }
+
+            const newSpan = document.createElement("span");
+            newSpan.className = "task-text";
+            newSpan.textContent = newText;
+
+            newSpan.addEventListener("click", function () {
+                startEditText(task, newSpan);
+            });
+
+            input.replaceWith(newSpan);
+            saveTasks();
+        }
+
+        input.addEventListener("blur", function () {
+            finish(true);
+        });
+
+        input.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                finish(true);
+            } else if (e.key === "Escape") {
+                finish(false);
+            }
+        });
+    }
+
+    // ---- Редактирование дедлайна ----
+
+    function startEditDeadline(task, deadlineSpan) {
+        const input = document.createElement("input");
+        input.type = "date";
+        input.className = "task-edit-date";
+        input.value = task.deadline || "";
+
+        deadlineSpan.replaceWith(input);
+        input.focus();
+
+        function finish(save) {
+            let newDeadline = task.deadline || "";
+            if (save) {
+                newDeadline = input.value || "";
+                task.deadline = newDeadline;
+            }
+
+            const newSpan = document.createElement("span");
+            newSpan.className = "task-deadline";
+
+            if (newDeadline) {
+                newSpan.textContent = formatDate(newDeadline);
+                newSpan.dataset.deadline = newDeadline;
+            } else {
+                newSpan.textContent = "Без дедлайна";
+                newSpan.classList.add("no-deadline");
+                newSpan.dataset.deadline = "";
+            }
+
+            newSpan.addEventListener("click", function () {
+                startEditDeadline(task, newSpan);
+            });
+
+            input.replaceWith(newSpan);
+            saveTasks();
+            // автоматической сортировки нет, только по кнопке
+            renderTasks();
+        }
+
+        input.addEventListener("blur", function () {
+            finish(true);
+        });
+
+        input.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                finish(true);
+            } else if (e.key === "Escape") {
+                finish(false);
+            }
+        });
     }
 
     // ---- Добавление задачи ----
@@ -173,7 +348,8 @@ document.addEventListener("DOMContentLoaded", function () {
             id: Date.now(),
             text: text,
             deadline: deadlineValue || "",
-            completed: false
+            completed: false,
+            completedAt: ""
         };
 
         tasks.push(newTask);
@@ -185,31 +361,55 @@ document.addEventListener("DOMContentLoaded", function () {
         taskInput.focus();
     });
 
-    // ---- Сортировка по дедлайнам ----
+    // ---- 1. Сортировка по дедлайну (от большего к меньшему) ----
 
-    function sortTasksByDeadline() {
+    function sortTasksByDeadlineDesc() {
         tasks.sort(function (a, b) {
             const da = a.deadline;
             const db = b.deadline;
 
+            // без дедлайна — в конец
             if (!da && !db) return 0;
             if (!da) return 1;
             if (!db) return -1;
 
-            if (da < db) return -1;
-            if (da > db) return 1;
+            // строки в формате YYYY-MM-DD сравниваются корректно
+            if (da < db) return 1;   // хотим БОЛЬШИЕ (поздние даты) ВВЕРХУ
+            if (da > db) return -1;
             return 0;
         });
-
-        saveTasks();
-        renderTasks();
     }
 
-    sortButton.addEventListener("click", function () {
-        sortTasksByDeadline();
+    sortDeadlineBtn.addEventListener("click", function () {
+        sortTasksByDeadlineDesc();
+        saveTasks();
+        renderTasks();
     });
 
-    // ---- Работа фильтров ----
+    // ---- 2. Сортировка по периоду (фильтрация по дедлайну) ----
+
+    // открыть/закрыть панель выбора периода
+    deadlinePeriodBtn.addEventListener("click", function () {
+        deadlinePeriodPanel.classList.toggle("is-open");
+    });
+
+    // применить период
+    deadlineApplyBtn.addEventListener("click", function () {
+        deadlineFrom = deadlineFromInput.value;
+        deadlineTo = deadlineToInput.value;
+        renderTasks();
+    });
+
+    // сбросить период
+    deadlineResetBtn.addEventListener("click", function () {
+        deadlineFrom = "";
+        deadlineTo = "";
+        deadlineFromInput.value = "";
+        deadlineToInput.value = "";
+        renderTasks();
+    });
+
+    // ---- Фильтры статуса ----
 
     function setFilter(filterName) {
         currentFilter = filterName;
@@ -283,5 +483,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ---- Старт ----
     loadTasks();
+    // При старте НЕ сортируем — sorting только по кнопке
+    saveTasks(); // на случай миграции старых данных
     renderTasks();
 });
