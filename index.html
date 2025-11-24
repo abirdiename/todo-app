@@ -35,11 +35,16 @@
             </div>
         </form>
 
-        <!-- Панель управления: сортировка + фильтры -->
+        <!-- Панель управления: две сортировки + фильтры -->
         <div class="controls-row">
-            <button type="button" id="sort-deadline" class="btn btn-sort">
-                Сортировать по дедлайну
-            </button>
+            <div class="sort-buttons">
+                <button type="button" id="sort-deadline" class="btn btn-sort">
+                    Сортировать по дедлайну
+                </button>
+                <button type="button" id="deadline-period-btn" class="btn btn-sort">
+                    Сортировка по периоду
+                </button>
+            </div>
 
             <div class="filters-row">
                 <button
@@ -62,6 +67,30 @@
                     data-filter="completed"
                 >
                     Выполненные
+                </button>
+            </div>
+        </div>
+
+        <!-- Панель выбора периода по дедлайну (открывается по кнопке "Сортировка по периоду") -->
+        <div id="deadline-period-panel" class="deadline-period-panel">
+            <div class="deadline-period-inner">
+                <span class="period-label">Показать задачи с дедлайном с</span>
+                <input
+                    type="date"
+                    id="deadline-from"
+                    class="input input-date-small"
+                >
+                <span class="period-label">по</span>
+                <input
+                    type="date"
+                    id="deadline-to"
+                    class="input input-date-small"
+                >
+                <button type="button" id="deadline-apply" class="btn btn-period">
+                    Применить
+                </button>
+                <button type="button" id="deadline-reset" class="btn btn-period-reset">
+                    Сбросить
                 </button>
             </div>
         </div>
