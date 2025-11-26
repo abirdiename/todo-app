@@ -363,28 +363,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // ---- 1. Сортировка по дедлайну (от меньшего к большему) ----
 
+// ⚙️ Сортировка по дедлайну: от меньшего к большему, без дедлайна — в конец
 function sortTasksByDeadlineAsc() {
     tasks.sort(function (a, b) {
-        const da = a.deadline;
-        const db = b.deadline;
+        var da = a.deadline;
+        var db = b.deadline;
 
-        // без дедлайна — в конец
+        // оба без дедлайна
         if (!da && !db) return 0;
+        // у a нет даты — в конец
         if (!da) return 1;
-        if (!db) return -1;
+        // у b нет даты — в конец
+        if (
 
-        // YYYY-MM-DD: теперь ОТ МЕНЬШЕГО К БОЛЬШЕМУ
-        if (da < db) return -1; // более ранняя дата выше
-        if (da > db) return 1;  // более поздняя ниже
-        return 0;
-    });
-}
-
-sortDeadlineBtn.addEventListener("click", function () {
-    sortTasksByDeadlineAsc();
-    saveTasks();
-    renderTasks();
-});
 
     // ---- 2. Сортировка по периоду (фильтрация по дедлайну) ----
 
