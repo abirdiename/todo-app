@@ -361,29 +361,30 @@ document.addEventListener("DOMContentLoaded", function () {
         taskInput.focus();
     });
 
-    // ---- 1. Сортировка по дедлайну (от большего к меньшему) ----
+// ---- 1. Сортировка по дедлайну (от меньшего к большему) ----
 
-    function sortTasksByDeadlineAsc() {
+function sortTasksByDeadlineAsc() {
     tasks.sort(function (a, b) {
         const da = a.deadline;
         const db = b.deadline;
 
+        // без дедлайна — в конец
         if (!da && !db) return 0;
-        if (!da) return 1;   // без дедлайна — в конец
+        if (!da) return 1;
         if (!db) return -1;
 
-        // сортировка ОТ МЕНЬШЕГО К БОЛЬШЕМУ
-        if (da < db) return -1;
-        if (da > db) return 1;
+        // YYYY-MM-DD: теперь ОТ МЕНЬШЕГО К БОЛЬШЕМУ
+        if (da < db) return -1; // более ранняя дата выше
+        if (da > db) return 1;  // более поздняя ниже
         return 0;
     });
 }
 
-    sortDeadlineBtn.addEventListener("click", function () {
-        sortTasksByDeadlineDesc();
-        saveTasks();
-        renderTasks();
-    });
+sortDeadlineBtn.addEventListener("click", function () {
+    sortTasksByDeadlineAsc();
+    saveTasks();
+    renderTasks();
+});
 
     // ---- 2. Сортировка по периоду (фильтрация по дедлайну) ----
 
