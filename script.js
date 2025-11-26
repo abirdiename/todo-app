@@ -363,22 +363,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ---- 1. Сортировка по дедлайну (от большего к меньшему) ----
 
-    function sortTasksByDeadlineDesc() {
-        tasks.sort(function (a, b) {
-            const da = a.deadline;
-            const db = b.deadline;
+    function sortTasksByDeadlineAsc() {
+    tasks.sort(function (a, b) {
+        const da = a.deadline;
+        const db = b.deadline;
 
-            // без дедлайна — в конец
-            if (!da && !db) return 0;
-            if (!da) return 1;
-            if (!db) return -1;
+        if (!da && !db) return 0;
+        if (!da) return 1;   // без дедлайна — в конец
+        if (!db) return -1;
 
-            // строки в формате YYYY-MM-DD сравниваются корректно
-            if (da < db) return 1;   // хотим БОЛЬШИЕ (поздние даты) ВВЕРХУ
-            if (da > db) return -1;
-            return 0;
-        });
-    }
+        // сортировка ОТ МЕНЬШЕГО К БОЛЬШЕМУ
+        if (da < db) return -1;
+        if (da > db) return 1;
+        return 0;
+    });
+}
+
 
     sortDeadlineBtn.addEventListener("click", function () {
         sortTasksByDeadlineDesc();
