@@ -379,7 +379,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 }
 
-
     sortDeadlineBtn.addEventListener("click", function () {
         sortTasksByDeadlineDesc();
         saveTasks();
