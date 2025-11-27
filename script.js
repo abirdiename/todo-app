@@ -1,40 +1,40 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const STORAGE_KEY = "todo-tasks";
+    var STORAGE_KEY = "todo-tasks";
 
-    const form = document.getElementById("task-form");
-    const taskInput = document.getElementById("task-input");
-    const deadlineInput = document.getElementById("deadline-input");
-    const taskList = document.getElementById("task-list");
+    var form = document.getElementById("task-form");
+    var taskInput = document.getElementById("task-input");
+    var deadlineInput = document.getElementById("deadline-input");
+    var taskList = document.getElementById("task-list");
 
-    const filterButtons = document.querySelectorAll(".btn-filter");
+    var filterButtons = document.querySelectorAll(".btn-filter");
 
-    const sortDeadlineBtn = document.getElementById("sort-deadline");
-    const deadlinePeriodBtn = document.getElementById("deadline-period-btn");
-    const deadlinePeriodPanel = document.getElementById("deadline-period-panel");
-    const deadlineFromInput = document.getElementById("deadline-from");
-    const deadlineToInput = document.getElementById("deadline-to");
-    const deadlineApplyBtn = document.getElementById("deadline-apply");
-    const deadlineResetBtn = document.getElementById("deadline-reset");
+    var sortDeadlineBtn = document.getElementById("sort-deadline");
+    var deadlinePeriodBtn = document.getElementById("deadline-period-btn");
+    var deadlinePeriodPanel = document.getElementById("deadline-period-panel");
+    var deadlineFromInput = document.getElementById("deadline-from");
+    var deadlineToInput = document.getElementById("deadline-to");
+    var deadlineApplyBtn = document.getElementById("deadline-apply");
+    var deadlineResetBtn = document.getElementById("deadline-reset");
 
-    let tasks = [];
-    let currentFilter = "all";   // all | active | completed
+    var tasks = [];
+    var currentFilter = "all";   // all | active | completed
 
-    // период по дедлайну (для кнопки "Сортировка по периоду")
-    let deadlineFrom = "";       // YYYY-MM-DD или ""
-    let deadlineTo = "";         // YYYY-MM-DD или ""
+    // период по дедлайну (для сортировки/фильтра по периоду)
+    var deadlineFrom = "";       // YYYY-MM-DD или ""
+    var deadlineTo = "";         // YYYY-MM-DD или ""
 
     // ---- localStorage ----
 
     function loadTasks() {
         try {
-            const raw = localStorage.getItem(STORAGE_KEY);
+            var raw = localStorage.getItem(STORAGE_KEY);
             if (!raw) {
                 tasks = [];
                 return;
             }
 
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) {
+            var parsed = JSON.parse(raw);
+            if (Object.prototype.toString.call(parsed) === "[object Array]") {
                 tasks = parsed.map(function (t) {
                     return {
                         id: t.id || Date.now(),
@@ -65,12 +65,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function parseDateOnly(iso) {
         if (!iso) return null;
-        const parts = iso.split("-");
+        var parts = iso.split("-");
         if (parts.length !== 3) return null;
-        const [yStr, mStr, dStr] = parts;
-        const y = Number(yStr);
-        const m = Number(mStr);
-        const d = Number(dStr);
+        var y = Number(parts[0]);
+        var m = Number(parts[1]);
+        var d = Number(parts[2]);
         if (!y || !m || !d) return null;
         return new Date(y, m - 1, d);
     }
@@ -86,11 +85,11 @@ document.addEventListener("DOMContentLoaded", function () {
             return false; // без дедлайна — вне периода
         }
 
-        const deadlineDate = parseDateOnly(task.deadline);
+        var deadlineDate = parseDateOnly(task.deadline);
         if (!deadlineDate) return false;
 
-        const fromDate = parseDateOnly(deadlineFrom);
-        const toDate = parseDateOnly(deadlineTo);
+        var fromDate = parseDateOnly(deadlineFrom);
+        var toDate = parseDateOnly(deadlineTo);
 
         if (fromDate && deadlineDate < fromDate) return false;
         if (toDate && deadlineDate > toDate) return false;
@@ -120,52 +119,52 @@ document.addEventListener("DOMContentLoaded", function () {
     function renderTasks() {
         taskList.innerHTML = "";
 
-        const tasksToShow = filterTasksForRender();
+        var tasksToShow = filterTasksForRender();
 
         tasksToShow.forEach(function (task) {
-            const li = createTaskElement(task);
+            var li = createTaskElement(task);
             taskList.appendChild(li);
         });
     }
 
     function createTaskElement(task) {
-        const li = document.createElement("li");
+        var li = document.createElement("li");
         li.className = "task-item";
 
-        const checkboxWrapper = document.createElement("div");
+        var checkboxWrapper = document.createElement("div");
         checkboxWrapper.className = "task-checkbox";
 
-        const checkbox = document.createElement("input");
+        var checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.className = "task-done";
         checkbox.checked = !!task.completed;
 
         checkboxWrapper.appendChild(checkbox);
 
-        const content = document.createElement("div");
+        var content = document.createElement("div");
         content.className = "task-content";
 
-        const textSpan = document.createElement("span");
+        var textSpan = document.createElement("span");
         textSpan.className = "task-text";
         textSpan.textContent = task.text;
 
-        const meta = document.createElement("div");
+        var meta = document.createElement("div");
         meta.className = "task-meta";
 
-        const deadlineLabel = document.createElement("span");
+        var deadlineLabel = document.createElement("span");
         deadlineLabel.className = "task-deadline-label";
         deadlineLabel.textContent = "Дедлайн:";
 
-        const deadlineSpan = document.createElement("span");
+        var deadlineSpan = document.createElement("span");
         deadlineSpan.className = "task-deadline";
 
         if (task.deadline) {
             deadlineSpan.textContent = formatDate(task.deadline);
-            deadlineSpan.dataset.deadline = task.deadline;
+            deadlineSpan.setAttribute("data-deadline", task.deadline);
         } else {
             deadlineSpan.textContent = "Без дедлайна";
             deadlineSpan.classList.add("no-deadline");
-            deadlineSpan.dataset.deadline = "";
+            deadlineSpan.setAttribute("data-deadline", "");
         }
 
         meta.appendChild(deadlineLabel);
@@ -174,10 +173,10 @@ document.addEventListener("DOMContentLoaded", function () {
         content.appendChild(textSpan);
         content.appendChild(meta);
 
-        const actions = document.createElement("div");
+        var actions = document.createElement("div");
         actions.className = "task-actions";
 
-        const deleteBtn = document.createElement("button");
+        var deleteBtn = document.createElement("button");
         deleteBtn.type = "button";
         deleteBtn.className = "btn btn-delete";
         deleteBtn.textContent = "Удалить";
@@ -205,7 +204,6 @@ document.addEventListener("DOMContentLoaded", function () {
             li.classList.toggle("task-completed", task.completed);
             saveTasks();
             updateTaskOverdueState(li);
-            // список НЕ пересортировываем автоматически – сортировка только по кнопке
             renderTasks();
         });
 
@@ -234,7 +232,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // ---- Редактирование текста ----
 
     function startEditText(task, textSpan) {
-        const input = document.createElement("input");
+        var input = document.createElement("input");
         input.type = "text";
         input.className = "task-edit-input";
         input.value = task.text;
@@ -244,16 +242,16 @@ document.addEventListener("DOMContentLoaded", function () {
         input.select();
 
         function finish(save) {
-            let newText = task.text;
+            var newText = task.text;
             if (save) {
-                const trimmed = input.value.trim();
+                var trimmed = input.value.replace(/^\s+|\s+$/g, "");
                 if (trimmed) {
                     newText = trimmed;
                     task.text = newText;
                 }
             }
 
-            const newSpan = document.createElement("span");
+            var newSpan = document.createElement("span");
             newSpan.className = "task-text";
             newSpan.textContent = newText;
 
@@ -281,7 +279,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // ---- Редактирование дедлайна ----
 
     function startEditDeadline(task, deadlineSpan) {
-        const input = document.createElement("input");
+        var input = document.createElement("input");
         input.type = "date";
         input.className = "task-edit-date";
         input.value = task.deadline || "";
@@ -290,22 +288,22 @@ document.addEventListener("DOMContentLoaded", function () {
         input.focus();
 
         function finish(save) {
-            let newDeadline = task.deadline || "";
+            var newDeadline = task.deadline || "";
             if (save) {
                 newDeadline = input.value || "";
                 task.deadline = newDeadline;
             }
 
-            const newSpan = document.createElement("span");
+            var newSpan = document.createElement("span");
             newSpan.className = "task-deadline";
 
             if (newDeadline) {
                 newSpan.textContent = formatDate(newDeadline);
-                newSpan.dataset.deadline = newDeadline;
+                newSpan.setAttribute("data-deadline", newDeadline);
             } else {
                 newSpan.textContent = "Без дедлайна";
                 newSpan.classList.add("no-deadline");
-                newSpan.dataset.deadline = "";
+                newSpan.setAttribute("data-deadline", "");
             }
 
             newSpan.addEventListener("click", function () {
@@ -314,7 +312,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
             input.replaceWith(newSpan);
             saveTasks();
-            // автоматической сортировки нет, только по кнопке
             renderTasks();
         }
 
@@ -336,15 +333,15 @@ document.addEventListener("DOMContentLoaded", function () {
     form.addEventListener("submit", function (event) {
         event.preventDefault();
 
-        const text = taskInput.value.trim();
-        const deadlineValue = deadlineInput.value; // YYYY-MM-DD
+        var text = taskInput.value.replace(/^\s+|\s+$/g, "");
+        var deadlineValue = deadlineInput.value; // YYYY-MM-DD
 
         if (!text) {
             taskInput.focus();
             return;
         }
 
-        const newTask = {
+        var newTask = {
             id: Date.now(),
             text: text,
             deadline: deadlineValue || "",
@@ -361,27 +358,49 @@ document.addEventListener("DOMContentLoaded", function () {
         taskInput.focus();
     });
 
-// ---- 1. Сортировка по дедлайну (от меньшего к большему) ----
+    // ---- 1. Сортировка по дедлайну (ОТ МЕНЬШЕГО К БОЛЬШЕМУ) ----
 
-// ⚙️ Сортировка по дедлайну: от меньшего к большему, без дедлайна — в конец
-function sortTasksByDeadlineAsc() {
-    tasks.sort(function (a, b) {
-        var da = a.deadline;
-        var db = b.deadline;
+    function sortTasksByDeadlineAsc() {
+        tasks.sort(function (a, b) {
+            var da = a.deadline;
+            var db = b.deadline;
 
-        // оба без дедлайна
-        if (!da && !db) return 0;
-        // у a нет даты — в конец
-        if (!da) return 1;
-        // у b нет даты — в конец
-        if (
+            // без дедлайна — в конец
+            if (!da && !db) return 0;
+            if (!da) return 1;
+            if (!db) return -1;
 
+            var dA = parseDateOnly(da);
+            var dB = parseDateOnly(db);
+
+            if (!dA && !dB) return 0;
+            if (!dA) return 1;
+            if (!dB) return -1;
+
+            var tA = dA.getTime();
+            var tB = dB.getTime();
+
+            if (tA < tB) return -1; // ранняя дата выше
+            if (tA > tB) return 1;  // поздняя ниже
+            return 0;
+        });
+    }
+
+    sortDeadlineBtn.addEventListener("click", function () {
+        sortTasksByDeadlineAsc();
+        saveTasks();
+        renderTasks();
+    });
 
     // ---- 2. Сортировка по периоду (фильтрация по дедлайну) ----
 
     // открыть/закрыть панель выбора периода
     deadlinePeriodBtn.addEventListener("click", function () {
-        deadlinePeriodPanel.classList.toggle("is-open");
+        if (deadlinePeriodPanel.classList.contains("is-open")) {
+            deadlinePeriodPanel.classList.remove("is-open");
+        } else {
+            deadlinePeriodPanel.classList.add("is-open");
+        }
     });
 
     // применить период
@@ -406,7 +425,7 @@ function sortTasksByDeadlineAsc() {
         currentFilter = filterName;
 
         filterButtons.forEach(function (btn) {
-            const btnFilter = btn.getAttribute("data-filter");
+            var btnFilter = btn.getAttribute("data-filter");
             if (btnFilter === filterName) {
                 btn.classList.add("filter-active");
             } else {
@@ -419,7 +438,7 @@ function sortTasksByDeadlineAsc() {
 
     filterButtons.forEach(function (btn) {
         btn.addEventListener("click", function () {
-            const filterName = btn.getAttribute("data-filter");
+            var filterName = btn.getAttribute("data-filter");
             setFilter(filterName);
         });
     });
@@ -428,38 +447,39 @@ function sortTasksByDeadlineAsc() {
 
     // Форматируем дату YYYY-MM-DD → DD.MM.YYYY
     function formatDate(isoDateString) {
-        const parts = isoDateString.split("-");
+        var parts = isoDateString.split("-");
         if (parts.length !== 3) return isoDateString;
-        const [year, month, day] = parts;
-        return `${day}.${month}.${year}`;
+        var year = parts[0];
+        var month = parts[1];
+        var day = parts[2];
+        return day + "." + month + "." + year;
     }
 
     function updateTaskOverdueState(taskItem) {
-        const deadlineSpan = taskItem.querySelector(".task-deadline");
-        const checkbox = taskItem.querySelector(".task-done");
+        var deadlineSpan = taskItem.querySelector(".task-deadline");
+        var checkbox = taskItem.querySelector(".task-done");
 
         if (!deadlineSpan) return;
 
-        const deadlineIso = deadlineSpan.dataset.deadline;
+        var deadlineIso = deadlineSpan.getAttribute("data-deadline");
         taskItem.classList.remove("task-overdue");
 
         if (!deadlineIso || (checkbox && checkbox.checked)) {
             return;
         }
 
-        const deadlineParts = deadlineIso.split("-");
+        var deadlineParts = deadlineIso.split("-");
         if (deadlineParts.length !== 3) return;
 
-        const [yearStr, monthStr, dayStr] = deadlineParts;
-        const year = Number(yearStr);
-        const month = Number(monthStr);
-        const day = Number(dayStr);
+        var year = Number(deadlineParts[0]);
+        var month = Number(deadlineParts[1]);
+        var day = Number(deadlineParts[2]);
 
         if (!year || !month || !day) return;
 
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const deadlineDate = new Date(year, month - 1, day);
+        var now = new Date();
+        var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        var deadlineDate = new Date(year, month - 1, day);
 
         if (deadlineDate < today) {
             taskItem.classList.add("task-overdue");
@@ -468,13 +488,13 @@ function sortTasksByDeadlineAsc() {
 
     // Периодически пересчитываем просрочку
     setInterval(function () {
-        const items = document.querySelectorAll(".task-item");
-        items.forEach(updateTaskOverdueState);
+        var items = document.querySelectorAll(".task-item");
+        items.forEach(function (item) {
+            updateTaskOverdueState(item);
+        });
     }, 60 * 1000);
 
     // ---- Старт ----
     loadTasks();
-    // При старте НЕ сортируем — sorting только по кнопке
-    saveTasks(); // на случай миграции старых данных
     renderTasks();
 });
